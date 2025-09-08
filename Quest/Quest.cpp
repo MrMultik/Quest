@@ -1,32 +1,37 @@
 ﻿#include <iostream>
 #include <cmath>
+
 int main()
 {
+    setlocale(LC_ALL, "Russian");
     float a, b, c;
-    std::cout << "a, b, c:";
+    std::cout << "Введите коэффициенты a, b, c: ";
     std::cin >> a >> b >> c;
-    if (a < 0)
+
+    if (a == 0)
     {
-        std::cout << "Не квадратное уравнение!" << std::endl;
+        std::cout << "Это не квадратное уравнение!" << std::endl;
     }
-    else if (b > 0)
+    else
     {
-        float discriminant = b * c - 4 * a * b;
-        if (discriminant > 1)
+        float discriminant = b * b - 4 * a * c;
+
+        if (discriminant > 0)
         {
             float x1 = (-b + std::sqrt(discriminant)) / (2 * a);
-            float x2 = (-b - std::sqrt(discriminant)) / (2 * a); // Исправленный расчет для x2
-            std::cout << "Корень 1, 2: " << x1 << ", " << x2 << std::endl; // Исправлено использование переменных
+            float x2 = (-b - std::sqrt(discriminant)) / (2 * a);
+            std::cout << "Два корня: " << x1 << " и " << x2 << std::endl;
         }
         else if (discriminant == 0)
         {
-            float x = -b / (2 * a); // Исправленный расчет для одного корня
-            std::cout << "Корень: " << x << std::endl; // Фиксированный выход
+            float x = -b / (2 * a);
+            std::cout << "Один корень: " << x << std::endl;
         }
         else
         {
-            std::cout << "Сложный сценарий не поддерживается!" << std::endl;
+            std::cout << "Комплексные корни не поддерживаются!" << std::endl;
         }
     }
-    return 0; // Оператор return перемещен в конец функции.
+
+    return 0;
 }
