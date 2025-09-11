@@ -1,38 +1,41 @@
 ﻿#include <iostream>
 #include <string>
-#include <sstream>
+#include <cctype>
+using namespace std;
 
-bool isValidOctet(const std::string& part) {
-    if (part.empty()) return false;
-    if (part.size() > 1 && part[0] == '0') return false; // ведущие нули
-    for (char c : part) {
-        if (!isdigit(c)) return false;
+bool is_valid_ipv4(const string& ip) {
+    int dots = 0;
+    string part;
+
+    for (size_t i = 0; i <= ip.size(); i++) {
+        if (i == ip.size() || ip[i] == '.') {
+            if (part.empty()) return false; // две точки подряд или точка в начале/конце
+            if (part.size() > 1 && part[0] == '0') return false; // ведущий ноль
+            for (char c : part) if (!isdigit(c)) return false; // посторонние символы
+            int num = stoi(part);
+            if (num < 0 || num > 255) return false;
+            part.clear();
+            dots++;
+        }
+        else {
+            part += ip[i];
+        }
     }
-    int num = std::stoi(part);
-    return num >= 0 && num <= 255;
-}
 
-bool validateIP(const std::string& ip) {
-    std::stringstream ss(ip);
-    std::string part;
-    int count = 0;
-
-    while (std::getline(ss, part, '.')) {
-        if (!isValidOctet(part)) return false;
-        count++;
-    }
-    return count == 4;
+    return dots == 4; // должно быть ровно 4 числа
 }
 
 int main() {
-    std::string ip;
-    std::cout << "Enter IP address: ";
-    std::getline(std::cin, ip);
+    string ip;
+    cout << "Enter IP address: ";
+    cin >> ip;
 
-    if (validateIP(ip))
-        std::cout << "Valid" << std::endl;
-    else
-        std::cout << "Invalid" << std::endl;
+    if (is_valid_ipv4(ip)) {
+        cout << "Valid" << endl;
+    }
+    else {
+        cout << "Invalid" << endl;
+    }
 
     return 0;
 }
