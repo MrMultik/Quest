@@ -1,62 +1,39 @@
 ﻿#include <iostream>
-#include <vector>
-#include <algorithm>
 #include <cmath>
-
-using ll = long long;
+using namespace std;
 
 int main() {
-    setlocale(LC_ALL, "");
+	setlocale(LC_ALL, "");
     int n;
-    std::cout << "Введите размер массива: ";
-    if (!(std::cin >> n) || n <= 0) {
-        std::cerr << "Ошибка размера.\n";
-        return 1;
-    }
+    cout << "Введите размер массива: ";
+    cin >> n;
 
-    std::vector<ll> a(n);
-    std::cout << "Введите элементы массива (отсортированные):\n";
-    for (int i = 0; i < n; i++) {
-        if (!(std::cin >> a[i])) {
-            std::cerr << "Ошибка ввода.\n";
-            return 1;
-        }
-    }
+    int a[100];
+    cout << "Введите " << n << " чисел (отсортированных по возрастанию):\n";
+    for (int i = 0; i < n; i++) cin >> a[i];
 
-    if (!std::is_sorted(a.begin(), a.end())) {
-        std::cerr << "Массив не отсортирован. Будет отсортирован.\n";
-        std::sort(a.begin(), a.end());
-    }
-
+    // Два указателя: слева отрицательные, справа положительные
     int right = 0;
     while (right < n && a[right] < 0) right++;
     int left = right - 1;
 
-    std::vector<ll> out;
-    out.reserve(n);
-
+    cout << "Результат: ";
     while (left >= 0 || right < n) {
         if (left < 0) {
-            out.push_back(a[right++]);
+            cout << a[right++] << " ";
         }
         else if (right >= n) {
-            out.push_back(a[left--]);
+            cout << a[left--] << " ";
         }
         else {
-            if (std::abs(a[left]) <= std::abs(a[right])) {
-                out.push_back(a[left--]);
+            if (abs(a[left]) <= abs(a[right])) {
+                cout << a[left--] << " ";
             }
             else {
-                out.push_back(a[right++]);
+                cout << a[right++] << " ";
             }
         }
     }
-
-    std::cout << "Результат:\n";
-    for (int i = 0; i < n; i++) {
-        std::cout << out[i];
-        if (i + 1 < n) std::cout << ", ";
-    }
-    std::cout << "\n";
+    cout << endl;
     return 0;
 }

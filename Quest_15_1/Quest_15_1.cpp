@@ -1,79 +1,33 @@
 ﻿#include <iostream>
-#include <vector>
-#include <clocale>
-#include <limits>
 using namespace std;
 
-// Результат: начало, конец, сумма
-struct Result {
-    int L;
-    int R;
-    long long sum;
-};
-
-// Функция поиска максимального подотрезка (вариант Кадане)
-// Возвращает структуру Result с L,R и суммой
-Result maxSubarray(const vector<long long>& a) {
-    int n = (int)a.size();
-    long long bestSum = a[0];
-    long long curSum = a[0];
-    int bestL = 0, bestR = 0;
-    int curL = 0;
-
-    for (int i = 1; i < n; ++i) {
-        // Если текущая сумма отрицательна — выгоднее начать заново
-        if (curSum < 0) {
-            curSum = a[i];
-            curL = i;
-        }
-        else {
-            curSum += a[i];
-        }
-
-        if (curSum > bestSum) {
-            bestSum = curSum;
-            bestL = curL;
-            bestR = i;
-        }
-    }
-    return { bestL, bestR, bestSum };
-}
-
 int main() {
-    setlocale(LC_ALL, "");
-
-    cout << "Задача: найти индексы i и j (0-based), для которых сумма a[i]..a[j] максимальна.\n";
-    cout << "Введите размер массива (целое > 0): ";
-
+	setlocale(LC_ALL, "");
     int n;
-    if (!(cin >> n)) {
-        cerr << "Ошибка ввода размера.\n";
-        return 1;
-    }
-    if (n <= 0) {
-        cerr << "Ошибка: размер массива должен быть положительным.\n";
-        return 1;
-    }
+    cout << "Введите размер массива: ";
+    cin >> n;
 
-    vector<long long> a(n);
-    cout << "Введите " << n << " целых чисел (через пробел или перевод строки):\n";
-    for (int i = 0; i < n; ++i) {
-        if (!(cin >> a[i])) {
-            cerr << "Ошибка ввода элемента массива.\n";
-            return 1;
+    int a[100]; // фиксированный массив (для учебных примеров)
+    cout << "Введите " << n << " чисел:\n";
+    for (int i = 0; i < n; i++) cin >> a[i];
+
+    int bestSum = -1000000; // заведомо маленькое число
+    int bestL = 0, bestR = 0;
+
+    // Два цикла для перебора всех отрезков массива
+    for (int i = 0; i < n; i++) {
+        int sum = 0;
+        for (int j = i; j < n; j++) {
+            sum += a[j];
+            if (sum > bestSum) {
+                bestSum = sum;
+                bestL = i;
+                bestR = j;
+            }
         }
     }
 
-    Result res = maxSubarray(a);
-
-    cout << "Ответ (индексы 0-based): " << res.L << " " << res.R << "\n";
-    cout << "Максимальная сумма = " << res.sum << "\n";
-
-    cout << "Подотрезок: { ";
-    for (int i = res.L; i <= res.R; ++i) {
-        cout << a[i] << (i < res.R ? ", " : " ");
-    }
-    cout << "}\n";
-
+    cout << "Максимальная сумма = " << bestSum << endl;
+    cout << "Индексы: " << bestL << " " << bestR << " (0-based)" << endl;
     return 0;
 }

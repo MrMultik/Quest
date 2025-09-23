@@ -1,46 +1,62 @@
 ﻿#include <iostream>
-#include <queue>
-
-using ll = long long;
+using namespace std;
 
 int main() {
-    setlocale(LC_ALL, "");
-    std::priority_queue<ll> max5;
-    long long total_count = 0;
+	setlocale(LC_ALL, "");
+    int top5[5];     // здесь всегда будут храниться 5 наименьших чисел
+    int count = 0;   // сколько чисел реально хранится (до 5)
 
-    std::cout << "Введите числа. Команды:\n"
-        << "-1 -> вывести 5-е по возрастанию\n"
-        << "-2 -> завершить\n";
+    cout << "Введите числа. -1 -> вывести 5-е по возрастанию, -2 -> завершить.\n";
 
     while (true) {
-        ll x;
-        if (!(std::cin >> x)) {
-            std::cerr << "Ошибка ввода.\n";
-            return 1;
-        }
+        int x;
+        cin >> x;
+
         if (x == -2) {
-            std::cout << "Завершение.\n";
+            cout << "Завершение программы.\n";
             break;
         }
         else if (x == -1) {
-            if (total_count < 5) {
-                std::cerr << "Недостаточно чисел для 5-го по возрастанию.\n";
+            if (count < 5) {
+                cout << "Недостаточно чисел для поиска 5-го минимума\n";
             }
             else {
-                std::cout << "5-е по возрастанию: " << max5.top() << "\n";
+                cout << "Пятое по возрастанию число = " << top5[4] << endl;
             }
         }
         else {
-            total_count++;
-            if ((int)max5.size() < 5) {
-                max5.push(x);
+            // Вставляем число в массив top5 (если нужно)
+            if (count < 5) {
+                top5[count] = x;
+                count++;
+                // сортируем вставкой массив top5
+                for (int i = 0; i < count; i++) {
+                    for (int j = i + 1; j < count; j++) {
+                        if (top5[i] > top5[j]) {
+                            int tmp = top5[i];
+                            top5[i] = top5[j];
+                            top5[j] = tmp;
+                        }
+                    }
+                }
             }
-            else if (x < max5.top()) {
-                max5.pop();
-                max5.push(x);
+            else {
+                // если массив уже заполнен
+                if (x < top5[4]) { // только если новое число меньше текущего 5-го
+                    top5[4] = x;
+                    // пересортируем массив
+                    for (int i = 0; i < 5; i++) {
+                        for (int j = i + 1; j < 5; j++) {
+                            if (top5[i] > top5[j]) {
+                                int tmp = top5[i];
+                                top5[i] = top5[j];
+                                top5[j] = tmp;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
-
     return 0;
 }

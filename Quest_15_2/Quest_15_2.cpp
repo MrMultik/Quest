@@ -1,44 +1,30 @@
 ﻿#include <iostream>
-#include <vector>
-#include <unordered_map>
-
-using ll = long long;
+using namespace std;
 
 int main() {
-    setlocale(LC_ALL, "");
+	setlocale(LC_ALL, "");
     int n;
-    std::cout << "Введите размер массива: ";
-    if (!(std::cin >> n) || n < 2) {
-        std::cerr << "Ошибка: размер должен быть >= 2.\n";
-        return 1;
-    }
+    cout << "Введите размер массива: ";
+    cin >> n;
 
-    std::vector<ll> a(n);
-    std::cout << "Введите элементы массива:\n";
+    int a[100];
+    cout << "Введите " << n << " чисел:\n";
+    for (int i = 0; i < n; i++) cin >> a[i];
+
+    int target;
+    cout << "Введите результат (сумму): ";
+    cin >> target;
+
+    // Перебираем все пары чисел
     for (int i = 0; i < n; i++) {
-        if (!(std::cin >> a[i])) {
-            std::cerr << "Ошибка ввода.\n";
-            return 1;
+        for (int j = i + 1; j < n; j++) {
+            if (a[i] + a[j] == target) {
+                cout << "Найдены числа: " << a[i] << " и " << a[j] << endl;
+                return 0; // нашли — можно завершить
+            }
         }
     }
 
-    ll target;
-    std::cout << "Введите результат (сумму): ";
-    if (!(std::cin >> target)) {
-        std::cerr << "Ошибка ввода.\n";
-        return 1;
-    }
-
-    std::unordered_map<ll, int> seen;
-    for (int i = 0; i < n; i++) {
-        ll need = target - a[i];
-        if (seen.count(need)) {
-            std::cout << "Найдены числа: " << need << " и " << a[i] << "\n";
-            return 0;
-        }
-        seen[a[i]] = i;
-    }
-
-    std::cerr << "Пара не найдена.\n";
-    return 1;
+    cout << "Пара не найдена" << endl;
+    return 0;
 }
