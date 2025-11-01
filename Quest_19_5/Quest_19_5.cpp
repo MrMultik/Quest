@@ -1,232 +1,141 @@
 ﻿#include <iostream>
 #include <fstream>
-#include <string>
 #include <vector>
-#include <cctype>
+#include <string>
 #include <locale>
-#include <windows.h> // для SetConsoleOutputCP
+using namespace std;
 
-class WhatWhereWhen {
-private:
-    std::vector<bool> playedSectors; // Отслеживание сыгравших секторов
-    int currentSector; // Текущий сектор (0-12)
-    int playerScore; // Счет игрока
-    int viewersScore; // Счет телезрителей
-    bool gameOver; // Флаг окончания игры
-    std::string basePath; // Базовый путь к файлам
-
-public:
-    WhatWhereWhen() {
-        // Настройка консоли для русского языка
-        SetConsoleOutputCP(1251);
-        SetConsoleCP(1251);
-        std::locale::global(std::locale("rus_rus.1251"));
-
-        playedSectors = std::vector<bool>(13, false);
-        currentSector = 0;
-        playerScore = 0;
-        viewersScore = 0;
-        gameOver = false;
-        basePath = "C:\\Users\\User\\Desktop\\C\\Test\\Quest\\Faile\\";
-    }
-
-    // Вращение волчка (выбор сектора)
-    void spinWheel(int offset) {
-        // Вычисляем новый сектор
-        int newSector = (currentSector + offset) % 13;
-        if (newSector < 0) newSector += 13;
-
-        // Ищем следующий неигравший сектор
-        int attempts = 0;
-        while (playedSectors[newSector] && attempts < 13) {
-            newSector = (newSector + 1) % 13;
-            attempts++;
-        }
-
-        // Если все секторы сыграли, игра заканчивается
-        if (playedSectors[newSector]) {
-            std::cout << "Все секторы уже сыграли! Игра завершена.\n";
-            gameOver = true;
-            return;
-        }
-
-        currentSector = newSector;
-        playedSectors[currentSector] = true;
-
-        std::cout << "Выпал сектор: " << (currentSector + 1) << "\n";
-    }
-
-    // Чтение вопроса из файла
-    std::string readQuestion() {
-        std::string questionFilename = basePath + "q" + std::to_string(currentSector + 1) + ".txt";
-
-        // Открываем файл в правильной кодировке
-        std::ifstream questionFile(questionFilename, std::ios::binary);
-
-        if (!questionFile.is_open()) {
-            return "Не удалось загрузить вопрос для сектора " + std::to_string(currentSector + 1);
-        }
-
-        // Читаем файл как бинарный и конвертируем в UTF-8
-        std::string question;
-        std::string line;
-        while (std::getline(questionFile, line)) {
-            question += line + "\n";
-        }
-
-        questionFile.close();
-        return question;
-    }
-
-    // Чтение ответа из файла
-    std::string readAnswer() {
-        std::string answerFilename = basePath + "a" + std::to_string(currentSector + 1) + ".txt";
-
-        // Открываем файл в правильной кодировке
-        std::ifstream answerFile(answerFilename, std::ios::binary);
-
-        if (!answerFile.is_open()) {
-            return "ERROR"; // Если файл не открылся
-        }
-
-        std::string answer;
-        std::getline(answerFile, answer);
-
-        answerFile.close();
-        return answer;
-    }
-
-    // Проверка существования файла
-    bool fileExists(const std::string& filename) {
-        std::ifstream file(filename);
-        return file.good();
-    }
-
-    // Проверка ответа игрока
-    void checkAnswer(const std::string& playerAnswer) {
-        std::string correctAnswer = readAnswer();
-
-        if (correctAnswer == "ERROR") {
-            std::cout << "Ошибка загрузки ответа! Балл получают телезрители.\n";
-            viewersScore++;
-            return;
-        }
-
-        // Приводим оба ответа к нижнему регистру для сравнения
-        std::string playerAnswerLower = toLower(playerAnswer);
-        std::string correctAnswerLower = toLower(correctAnswer);
-
-        if (playerAnswerLower == correctAnswerLower) {
-            playerScore++;
-            std::cout << "Правильно! Вы заработали 1 балл.\n";
-        }
-        else {
-            viewersScore++;
-            std::cout << "Неправильно! Балл получают телезрители.\n";
-            std::cout << "Правильный ответ: " << correctAnswer << "\n";
-        }
-
-        // Проверяем условия победы
-        if (playerScore >= 6) {
-            std::cout << "\n*** ПОБЕДА ИГРОКА! ***\n";
-            gameOver = true;
-        }
-        else if (viewersScore >= 6) {
-            std::cout << "\n*** ПОБЕДА ТЕЛЕЗРИТЕЛЕЙ! ***\n";
-            gameOver = true;
-        }
-    }
-
-    // Вспомогательная функция для приведения к нижнему регистру (только для английских букв)
-    std::string toLower(const std::string& str) {
-        std::string result = str;
-        for (char& c : result) {
-            // Преобразуем только английские буквы
-            if (c >= 'A' && c <= 'Z') {
-                c = std::tolower(c);
-            }
-        }
-        return result;
-    }
-
-    // Проверка существования файлов
-    bool checkFilesExist() {
-        bool allFilesExist = true;
-        for (int i = 1; i <= 13; i++) {
-            std::string questionFile = basePath + "q" + std::to_string(i) + ".txt";
-            std::string answerFile = basePath + "a" + std::to_string(i) + ".txt";
-
-            if (!fileExists(questionFile)) {
-                std::cout << "Ошибка: отсутствует файл вопроса " << questionFile << "\n";
-                allFilesExist = false;
-            }
-            if (!fileExists(answerFile)) {
-                std::cout << "Ошибка: отсутствует файл ответа " << answerFile << "\n";
-                allFilesExist = false;
-            }
-        }
-
-        if (allFilesExist) {
-            std::cout << "Все файлы вопросов и ответов найдены!\n";
-        }
-        return allFilesExist;
-    }
-
-    // Основной игровой цикл
-    void playGame() {
-        std::cout << "=== ДОБРО ПОЖАЛОВАТЬ В ИГРУ 'ЧТО? ГДЕ? КОГДА?' ===\n\n";
-
-        // Проверяем существование файлов
-        if (!checkFilesExist()) {
-            std::cout << "Не все файлы вопросов и ответов найдены!\n";
-            std::cout << "Убедитесь, что файлы называются: q1.txt, a1.txt, q2.txt, a2.txt, ... q13.txt, a13.txt\n";
-            return;
-        }
-
-        while (!gameOver) {
-            std::cout << "\n--- Текущий счет ---\n";
-            std::cout << "Игрок: " << playerScore << " | Телезрители: " << viewersScore << "\n\n";
-
-            // Вращение волчка
-            int offset;
-            std::cout << "Введите смещение для вращения волчка: ";
-            std::cin >> offset;
-            std::cin.ignore(); // Очищаем буфер
-
-            spinWheel(offset);
-
-            if (gameOver) break;
-
-            // Чтение и вывод вопроса
-            std::string question = readQuestion();
-            std::cout << "\n--- ВОПРОС ---\n";
-            std::cout << question << "\n";
-
-            // Получение ответа от игрока
-            std::string playerAnswer;
-            std::cout << "Ваш ответ: ";
-            std::getline(std::cin, playerAnswer);
-
-            // Проверка ответа
-            checkAnswer(playerAnswer);
-        }
-
-        // Финальные результаты
-        std::cout << "\n=== ИГРА ОКОНЧЕНА ===\n";
-        std::cout << "Финальный счет:\n";
-        std::cout << "Игрок: " << playerScore << " | Телезрители: " << viewersScore << "\n";
-
-        if (playerScore > viewersScore) {
-            std::cout << "ПОБЕДИЛ ИГРОК! ПОЗДРАВЛЯЕМ!\n";
-        }
-        else {
-            std::cout << "ПОБЕДИЛИ ТЕЛЕЗРИТЕЛИ!\n";
-        }
-    }
+struct Payment {
+    string name;
+    string surname;
+    string date;
+    double amount;
 };
 
+// Функция для создания файла
+void createFile(const string& filePath) {
+    ofstream file(filePath);
+    if (file.is_open()) {
+        cout << "Файл успешно создан: " << filePath << endl;
+        
+        // Можно сразу добавить тестовые данные
+        cout << "Добавить тестовые данные? (y/n): ";
+        char choice;
+        cin >> choice;
+        
+        if (choice == 'y' || choice == 'Y') {
+            file << "Иван Иванов 01.01.2024 15000.50" << endl;
+            file << "Петр Петров 15.01.2024 20000.00" << endl;
+            file << "Мария Сидорова 20.01.2024 18000.75" << endl;
+            cout << "Тестовые данные добавлены!" << endl;
+        }
+        
+        file.close();
+    } else {
+        cout << "Ошибка создания файла!" << endl;
+    }
+}
+
+// Функция для чтения файла
+void readFile(const string& filePath) {
+    ifstream file(filePath);
+    if (!file.is_open()) {
+        cout << "Файл не найден! Создайте его сначала." << endl;
+        return;
+    }
+
+    vector<Payment> list;
+    Payment p;
+    
+    while (file >> p.name >> p.surname >> p.date >> p.amount) {
+        list.push_back(p);
+    }
+    file.close();
+
+    if (list.empty()) {
+        cout << "Файл пустой!" << endl;
+    } else {
+        cout << "\n=== ВЕДОМОСТЬ ВЫПЛАТ ===\n";
+        for (auto& x : list) {
+            cout << x.name << " " << x.surname << " | Дата: " << x.date 
+                 << " | Сумма: " << x.amount << " руб.\n";
+        }
+        cout << "=============================\n";
+    }
+}
+
+// Функция для добавления записи
+void addRecord(const string& filePath) {
+    ofstream file(filePath, ios::app);
+    if (!file.is_open()) {
+        cout << "Ошибка открытия файла! Создайте его сначала." << endl;
+        return;
+    }
+
+    Payment p;
+    cout << "Введите имя: ";
+    cin >> p.name;
+    cout << "Введите фамилию: ";
+    cin >> p.surname;
+    cout << "Введите дату (ДД.ММ.ГГГГ): ";
+    cin >> p.date;
+    cout << "Введите сумму: ";
+    cin >> p.amount;
+
+    file << p.name << " " << p.surname << " " << p.date << " " << p.amount << endl;
+    file.close();
+    cout << "Запись добавлена!" << endl;
+}
+
+// Функция для очистки файла
+void clearFile(const string& filePath) {
+    cout << "Вы уверены, что хотите очистить файл? (y/n): ";
+    char choice;
+    cin >> choice;
+    
+    if (choice == 'y' || choice == 'Y') {
+        ofstream file(filePath, ios::trunc);
+        file.close();
+        cout << "Файл очищен!" << endl;
+    }
+}
+
 int main() {
-    WhatWhereWhen game;
-    game.playGame();
+    setlocale(LC_ALL, "Russian");
+
+    string filePath = "payments.txt";  // Относительный путь
+    int choice;
+
+    do {
+        cout << "\n=== УПРАВЛЕНИЕ ФАЙЛОМ ВЫПЛАТ ===\n";
+        cout << "1. Создать файл\n";
+        cout << "2. Просмотреть данные\n";
+        cout << "3. Добавить запись\n";
+        cout << "4. Очистить файл\n";
+        cout << "5. Выйти\n";
+        cout << "Выберите действие: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                createFile(filePath);
+                break;
+            case 2:
+                readFile(filePath);
+                break;
+            case 3:
+                addRecord(filePath);
+                break;
+            case 4:
+                clearFile(filePath);
+                break;
+            case 5:
+                cout << "Выход из программы..." << endl;
+                break;
+            default:
+                cout << "Неверный выбор!" << endl;
+        }
+    } while (choice != 5);
+
     return 0;
 }
