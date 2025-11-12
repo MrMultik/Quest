@@ -2,63 +2,78 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <iomanip>
+#include <algorithm>
 using namespace std;
 
 struct Friend {
     string name;
-    int year = 0, month = 0, day = 0;
+    int year, month, day;
 };
 
 int main() {
     setlocale(LC_ALL, "Russian");
 
     vector<Friend> friends;
-    string name;
-    cout << "Введите имена и даты рождения друзей (год/месяц/день). Введите 'end' для завершения.\n";
+    cout << "Введите имя и дату рождения (ГГГГ/ММ/ДД), или end для завершения:\n";
 
     while (true) {
-        cout << "Имя: ";
-        cin >> name;
-        if (name == "end") break;
         Friend f;
-        f.name = name;
-        cout << "Дата рождения (ГГГГ ММ ДД): ";
-        cin >> f.year >> f.month >> f.day;
+        cout << "Имя: ";
+        cin >> f.name;
+        if (f.name == "end") break;
+
+        char sep;
+        cout << "Дата (ГГГГ/ММ/ДД): ";
+        cin >> f.year >> sep >> f.month >> sep >> f.day;
         friends.push_back(f);
     }
 
-    time_t now = time(nullptr);
-    tm current;
-    localtime_s(&current, &now);
+    if (friends.empty()) {
+        cout << "Нет данных о друзьях.\n";
+        return 0;
+    }
 
-    int todayMonth = current.tm_mon + 1;
-    int todayDay = current.tm_mday;
+    time_t now = time(nullptr);
+    tm today{};
+#ifdef _WIN32
+    localtime_s(&today, &now);
+#else
+    localtime_r(&now, &today);
+#endif
 
     bool foundToday = false;
-    string nearestName;
-    int nearestMonth = 0, nearestDay = 0;
-    int minDiff = 400;
+    vector<pair<int, string>> upcoming;
 
     for (auto& f : friends) {
-        if (f.month == todayMonth && f.day == todayDay) {
-            cout << "Сегодня день рождения у " << f.name << "! [Праздник]\n";
-            foundToday = true;
-            continue;
+        tm birthday{};
+        birthday.tm_mday = f.day;
+        birthday.tm_mon = f.month - 1;
+        birthday.tm_year = today.tm_year; // текущий год
+
+        time_t btime = mktime(&birthday);
+
+        if (difftime(btime, now) < 0) {
+            birthday.tm_year++; // если уже прошёл — переносим
+            btime = mktime(&birthday);
         }
 
-        int diff = (f.month - todayMonth) * 31 + (f.day - todayDay);
-        if (diff <= 0) diff += 12 * 31; // если день уже прошёл — следующий год
-        if (diff < minDiff) {
-            minDiff = diff;
-            nearestName = f.name;
-            nearestMonth = f.month;
-            nearestDay = f.day;
+        double diffSec = difftime(btime, now);
+        int diffDays = static_cast<int>(diffSec / (60 * 60 * 24));
+
+        if (diffDays == 0) {
+            cout << "Сегодня день рождения у: " << f.name << "!\n";
+            foundToday = true;
+        }
+        else {
+            upcoming.push_back({ diffDays, f.name });
         }
     }
 
-    if (!foundToday && !nearestName.empty()) {
-        cout << "\nБлижайший день рождения у " << nearestName
-            << ": " << nearestMonth << "/" << nearestDay << endl;
+    if (!foundToday && !upcoming.empty()) {
+        sort(upcoming.begin(), upcoming.end());
+        cout << "\nБлижайший день рождения через "
+            << upcoming.front().first << " дн. у " << upcoming.front().second << "\n";
     }
 
     return 0;
